@@ -81,16 +81,16 @@ func (r *router) getRoute(method string, path string) (*node, map[string]string)
 
 // 在调用匹配到的handler前，将解析出来的路由参数赋值给了c.Params
 func (r *router) handle(c *Context) {
-	fmt.Println("handle------", c.Method, c.Path)
 	n, params := r.getRoute(c.Method, c.Path)
-	fmt.Println("handle222------", n, params)
+
 	if n != nil {
 		c.Params = params
 		key := c.Method + "-" + n.pattern
-		fmt.Println("handle exce------", key)
-		r.handlers[key](c)
+		c.handlers = append(c.handlers, r.handlers[key])
 	} else {
-		fmt.Println("handle error------")
-		c.String(http.StatusNotFound, "404 NOT FOUND: %s\n", c.Path)
+		c.handlers = append(c.handlers, func(c *Context) {
+			c.String(http.StatusNotFound, "404 NOT FOUND: %s\n", c.Path)
+		})
 	}
+	c.Next()
 }
